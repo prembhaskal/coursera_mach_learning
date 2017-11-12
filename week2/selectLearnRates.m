@@ -13,7 +13,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-function [] = selectLearnRates()
+function [] = selectLearnRates(alpha, colorcode)
 %selectLearnRates plots the cost function using different learning rates
 % it works on week2 data.
 data = load('ex1data2.txt');
@@ -44,12 +44,12 @@ printf('size of X_Norm is ');disp(size(X_Norm));
 X_Norm([1:3],:)
 
 num_iters = 50;
-alpha = 0.1;
+%alpha = 0.1;
 theta = zeros(n,1) % theta values start from theta0, theta1, theta2 ... thetaN
 printf('size of theta is ');disp(size(theta));
 [theta1, J_Hist] = gradientDescentMulti(X_Norm, Y_Norm, theta, alpha, num_iters);
 %printf('size of J_Hist is ');disp(size(J_Hist));
-plot(1:50, J_Hist(1:50), 'b');
+plot(1:50, J_Hist(1:50), colorcode);
 xlabel('no of iterations');
 ylabel('cost function value');
 
