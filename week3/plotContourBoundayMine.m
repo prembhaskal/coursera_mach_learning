@@ -13,15 +13,16 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-function plotContourBoundayMine (theta, X, y)
+function plotContourBoundayMine (theta, X, y, N)
+% contour boundary, also needs the degree of feature mapping N along with other data.
     disp('printing boundary using custom code');
   % Plot Data using our function, skip the first column which is all ones.
     plotData(X(:,2:3), y);
     hold on;
     
     % creata a grid of points to help us plot the decision boundary.
-    u = linspace(-1, 1.5, 50);
-    v = linspace(-1, 1.5, 50);
+    u = linspace(30, 100, 100);
+    v = linspace(30,100, 100);
     
     % decision boundary is the curve theta' * X = theta0 . X0 + theta1. X1 + ... + thetaN.XN = 0
     % after feature mapping, we have many features to fit data more closely
@@ -33,7 +34,7 @@ function plotContourBoundayMine (theta, X, y)
         for j = 1:length(v)
             % mapFeature(val1, val2) will return [1 x n] vector. the below multiplication calculates 
             % the value for theta'.X for us.
-            z(i,j) = mapFeature(u(i), v(j))*theta;
+            z(i,j) = mapFeatureN(u(i), v(j),N)*theta;
         end
     end
     
