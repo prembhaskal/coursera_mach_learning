@@ -24,6 +24,7 @@ Theta2 = reshape(nn_params((1 + (hidden_layer_size * (input_layer_size + 1))):en
 
 % Setup some useful variables
 m = size(X, 1);
+X_orig = X;
          
 % You need to return the following variables correctly 
 J = 0;
@@ -39,13 +40,13 @@ Theta2_grad = zeros(size(Theta2));
   
   % calculating h_theta(x)  = a(3) --> with 1 hidden layer.
   X = [ones(size(X,1),1) X];
-  disp('size of X is \n'); disp(size(X));
+  %disp('size of X is \n'); disp(size(X));
   z_2 = Theta1 * X';  %size [S(2), S(1)+1] * [S(1)+1,m] = [S(2),m]
   a_2 = sigmoid(z_2); % size [S(2),m]
   a_2 = a_2';  %size [m,S(2)]
   
   a_2 = [ones(size(a_2,1),1) a_2]; %size [m,S(2)+1]
-  disp('size of a_2 is \n');disp(size(a_2));
+  %disp('size of a_2 is \n');disp(size(a_2));
   z_3 = Theta2 * a_2'; %size [S(3),S(2)+1] * [S(2)+1,m] = [S(3),m] = [num_labels,m]
   a_3 = sigmoid(z_3);% size [S(3),m]
   a_3 = a_3'; %size [m,S(3)] = [m,num_labels]
@@ -94,6 +95,72 @@ Theta2_grad = zeros(size(Theta2));
 %               over the training examples if you are implementing it for the 
 %               first time.
 %
+
+  % iterate over training set
+  DEL_2 = zeros(size(Theta2));
+  DEL_1 = zeros(size(Theta1));
+  % for i=1:m
+    
+    % % fwd propagation for layer 1
+    % X_i = X_orig(i,:); % get ith row from input
+    % X_i = X_i'; % size [s(1),1]
+    % X_i = [1;X_i]; % add bias unit - size[S(1)+1,1]
+    % Theta1;%size[S(2), S(1)+1]
+    % z_2 = Theta1 * X_i;%size[S(2),S(1)+1] * [S(1)+1,1] = [S(2),1]
+    % a_2 = sigmoid(z_2);%size[S(2),1]
+    
+    % % fwd propagation for layer 2
+    % a_2 = [1; a_2]; %size[S(2)+1,1]
+    % Theta2;%size[K,S(2)+1] K = num_labels
+    % z_3 = Theta2 * a_2;%size[K,1]
+    % a_3 = sigmoid(z_3); %size[K,1]
+    
+    % % back propagation - del3
+    % y_i = zeros(num_labels,1); % size[K,1]
+    % y_i(y(i,1),1) = 1;
+    % del_3 = a_3 - y_i; %size[K,1]
+    
+    % % back propagtion - del2
+    % % del_2 = theta2
+    % del_2 = (Theta2' * del_3); %size[S(2)+1,K] * [K,1] = [S(2)+1,1]
+    % % remove bias unit from del_2
+    % del_2 = del_2(2:end,1) .* sigmoidGradient(z_2); %size [S(2),1] 
+    
+    % % accumulate in DEL2
+    % DEL_2 = DEL_2 .+ (del_3 * a_2'); % size [K,1] * [1, S(2)+1]     = [K,S(2)+1] 
+    
+    % % accumulate in DEL1
+    % DEL_1 = DEL_1 .+ (del_2 * X_i');% size[S(2),1] * [1, S(1)+1] = [S(2), S(1)+1]
+  % end
+  
+  % fwd propagation without loop.
+  X_orig; %size[m,S1]
+  X_n = X_orig'; %[S1,m] -- column vector for each training set
+  X_n = [ones(1,m); X_n]; %[S1+1,m]
+  Theta1; %[S2, S1 + 1]
+  z_2 = Theta1 * X_n  ;%[S2,m]
+  a_2 = sigmoid(z_2);%[S2,m]
+  
+  a_2 = [ones(1,m); a_2];%[S2+1,m]
+  Theta2;%[k,S2+1]
+  z_3 = Theta2 * a_2;%[k,m]
+  a_3 = sigmoid(z_3); %[k,m]
+  
+  % back propagation without loop
+  y_n = zeros(num_labels,m);%[k,m]
+  for i=1:m
+	y_n(y(i,1),i) = 1;
+  end
+  
+  del_3 = a_3 .- y_n ;%[k,m]
+  del_2 = (Theta2'(2:end,:) * del_3) .* sigmoidGradient(z_2); % same size as a2 without bias unit --> [S2,m]
+  
+  DEL_2 = del_3 * a_2';% [k,m] * [m,S2+1] =[k,S2+1]
+  DEL_1 = del_2 * X_n';% [S2,m] * [m,S1+1] =[S2,S1+1]
+  
+  Theta1_grad = DEL_1 ./ m;
+  Theta2_grad = DEL_2 ./ m;
+
 % Part 3: Implement regularization with the cost function and gradients.
 %
 %         Hint: You can implement this around the code for
@@ -116,24 +183,21 @@ Theta2_grad = zeros(size(Theta2));
   
   J = cost + reg_cost;
   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
+  % reg_cost for the gradient calculation
+  % grad = 1/m * DEL + lambda/m*Theta(i,j)  where j >0
+  
+  
+  Theta1_reg = Theta1;
+  Theta1_reg(:,1) = zeros(size(Theta1,1),1);
+  grad1_reg = (Theta1_reg .* lambda) ./ m;
+  Theta1_grad = Theta1_grad .+ grad1_reg;
+  
+  Theta2_reg = Theta2;
+  Theta2_reg(:,1) = zeros(size(Theta2,1),1);
+  grad2_reg = (Theta2_reg .* lambda) ./ m;
+  Theta2_grad = Theta2_grad .+ grad2_reg;
+  
 % -------------------------------------------------------------
 
 % =========================================================================
